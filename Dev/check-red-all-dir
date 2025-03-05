@@ -1,0 +1,4 @@
+echo "Usage: check-red-all <java src folder>"
+
+egrep --color=auto -C 3 -rn --include="*.java "--include="*.kt" "^\+.*?(\s+$|	+)" $1
+# egrep --color=auto -C 3 -rn --include="*.java "--include="*.kt" "^.*?\s+$|	+" $1

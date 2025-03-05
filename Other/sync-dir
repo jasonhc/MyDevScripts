@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+if [ $# -lt 3 ]; then
+    echo "Usage: sync-dir <src folder> <dst host> <dst folder>"
+    exit
+fi
+
+SRC_FOLDER=$1
+DST_HOST=$2
+DST_FOLDER=$3
+
+echo Sync dir $SRC_FOLDER to host \"$DST_HOST\":$DST_FOLDER...
+tar -c $SRC_FOLDER | ssh $DST_HOST "tar -C $DST_FOLDER -xv"
+

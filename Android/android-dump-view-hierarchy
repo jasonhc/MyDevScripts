@@ -1,0 +1,13 @@
+# Dump view hierarchy of top activity of an app
+# Usage: dump-xxx <app's package name>
+# Note: can not be used in Android 5 and below, use dump-view-hierarchy-of-activity instead.
+
+if [ $# -lt 1 ]; then
+    echo "Usage: dump-xxx <app's package name>"
+    exit 1
+fi
+
+packageName=$1
+
+adb shell dumpsys activity $packageName | sed -n '/View Hierarchy:/,/Looper/p' | sed -n '1,/Looper/p'
+

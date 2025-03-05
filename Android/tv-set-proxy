@@ -1,0 +1,2 @@
+echo "Usage: tv-set-proxy <ip of pc>"
+adb shell settings put global http_proxy "$1:8888"

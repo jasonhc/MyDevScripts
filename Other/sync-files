@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+if [ $# -lt 4 ]; then
+    echo "Usage: sync-files <src folder> \"<files pattern>\" <dst host> <dst folder>"
+    exit
+fi
+
+TEMP_SRC_SYNC_FOLDER=~/tmp
+TEMP_DST_SYNC_FOLDER=/Users/hechuan/tmp
+TEMP_ARCHIVE_FILE=srctemp.zip
+
+SRC_FOLDER=$1
+FILES_TO_SYNC=$2
+DST_HOST=$3
+DST_FOLDER=$4
+
+rm $TEMP_SRC_SYNC_FOLDER/$TEMP_ARCHIVE_FILE
+
+echo Sync files $FILES_TO_SYNC...
+cd $SRC_FOLDER
+find . -name "$FILES_TO_SYNC" | xargs zip -R $TEMP_SRC_SYNC_FOLDER/$TEMP_ARCHIVE_FILE
+scp $TEMP_SRC_SYNC_FOLDER/$TEMP_ARCHIVE_FILE $DST_HOST:$TEMP_DST_SYNC_FOLDER
+ssh $DST_HOST "cd $DST_FOLDER && unzip $TEMP_DST_SYNC_FOLDER/$TEMP_ARCHIVE_FILE"

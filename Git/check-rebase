@@ -1,0 +1,43 @@
+
+# Check if a rebase is correct by comparing patch files responding to 2 commits.
+# Rebase is OK if no output or only empty lines is output.
+# @author hechuan, 2015/11/17
+
+# return 0 if parameter obj is a branch
+function is_git_branch
+{
+    checkBranchResult=$(git branch | grep $1)
+    if [ "$checkBranchResult" == "" ]; then
+        return 1;
+    else
+        return 0;
+    fi
+}
+
+if [ $# -lt 4 ]; then
+    echo "Usage: check-rebase <origin branch commit> <origin base branch> <commit rebased> <new base branch> [ui]"
+    exit 0
+fi
+
+extractWrongMergeRegex="^[+-][-+][^+-]"
+#EXTRACT_WRONG_MERGE_REGEX="^[+][-+][^+-]"
+originCommit=$1
+originBaseBranch=$2
+commitRebased=$3
+newBaseBranch=$4
+useDiffTool=$5
+tempPatchDir=.
+
+mergeBaseCommit=$(git merge-base $originCommit $originBaseBranch)
+echo Merge branch $originCommit, base commit: $mergeBaseCommit
+git diff -w $mergeBaseCommit $originCommit > $tempPatchDir/check-merge-tmp-patch.patch
+
+echo "Rebase check result... (Rebase is OK if no output or only empty lines is output)"
+echo ""
+changesAfterRebase="$newBaseBranch $commitRebased"
+if [ "$useDiffTool" = "ui" ]; then
+    git diff -w $changesAfterRebase > $tempPatchDir/check-merge-tmp-rebased.patch
+    bcomp $tempPatchDir/check-merge-tmp-patch.patch $tempPatchDir/check-merge-tmp-rebased.patch &
+else
+    git diff -w $changesAfterRebase | diff -uw $tempPatchDir/check-merge-tmp-patch.patch - | grep --color=auto -E $extractWrongMergeRegex
+fi

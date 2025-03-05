@@ -1,0 +1,9 @@
+declare -i i=1
+
+# get list of android devices
+DEVICES=$(adb devices | tail -n +2 | cut -f1)
+for DEVICE in $DEVICES
+do
+    echo "#$i\t$DEVICE\t$(adb -s $DEVICE shell getprop ro.product.model)"
+    i=i+1
+done

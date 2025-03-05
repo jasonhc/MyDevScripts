@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# 检查输入参数
+if [ "$#" -lt 2 ]; then
+    echo "用法: $0 <APK文件路径> <输出目录> [<要反编译的类包名>]"
+    echo "  <要反编译的类包名>: 可选参数，例如 com.foo.bar"
+    exit 1
+fi
+
+DEX2JAR=~/work/android_dev_tools/dex2jar-2.1/d2j-dex2jar.sh
+CFR=~/work/android_dev_tools/cfr.jar
+
+APK_FILE=$1
+OUTPUT_DIR=$2
+DECOMPILED_CLASS_PACKAGE=$3
+
+# 创建临时目录
+TEMP_DIR=$(mktemp -d)
+echo "TEMP dir: $TEMP_DIR"
+
+# 解压APK文件
+unzip "$APK_FILE" "class*.dex" -d "$TEMP_DIR"
+
+# 查找所有的.dex文件并转换为.jar文件
+find "$TEMP_DIR" -name "*.dex" | while read -r DEX_FILE; do
+  $DEX2JAR "$DEX_FILE" -o "${DEX_FILE%.dex}.jar"
+done
+
+# 反编译.jar文件为Java文件
+if [ -z "$DECOMPILED_CLASS_PACKAGE" ]; then
+  jarFilterArg=""
+else
+  jarFilterArg="--jarfilter ${DECOMPILED_CLASS_PACKAGE}.*"
+fi
+find "$TEMP_DIR" -name "*.jar" | while read -r JAR_FILE; do
+  java -jar "$CFR" "$JAR_FILE" --outputdir "$OUTPUT_DIR" $jarFilterArg
+done
+
+# 删除临时目录
+rm -rf "$TEMP_DIR"
+
+echo "反编译完成，Java文件已存放在 $OUTPUT_DIR"

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+if [ $# -lt 1 ]; then
+    echo "Usage: gsquash <number of commits>"
+    exit 1
+fi
+
+SQUASHED_COMMIT_NUMBER=$1
+declare -i FIRST_COMMIT_INDEX
+let FIRST_COMMIT_INDEX=$SQUASHED_COMMIT_NUMBER-1
+FIRST_COMMIT_MSG=$(git log -1 HEAD~$FIRST_COMMIT_INDEX --pretty=format:%s)
+
+git reset --soft HEAD~$SQUASHED_COMMIT_NUMBER
+git commit -m "$FIRST_COMMIT_MSG"
+

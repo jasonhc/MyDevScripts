@@ -1,0 +1,29 @@
+# Usage: arecscr [-c] <screen video file> [<time limit>]
+#   -c  pull video file from sdcard (be used after interrupt video recording with Ctrl-C)
+#   <time limit>  time (in seconds) of recording
+
+continueFlag=""
+while [ "${1:0:1}" == "-" ]; do
+    if [ "$1" == "-c" ]; then
+        continueFlag="on"
+    fi
+    shift
+done
+
+if [ $# -lt 1 ]; then
+    echo "Usage: arecscr [-c] <screen video file> [<time limit>]"
+    exit 1
+fi
+
+videoFile=$1
+if [ "$continueFlag" == "on" ]; then
+  adb pull /sdcard/demo.mp4 $videoFile
+  exit 0
+fi
+
+VIDEO_SIZE="854x480"
+if [ $# -ge 2 ]; then
+  timeLimitOption="--time-limit $2"
+fi
+
+adb shell screenrecord --verbose $timeLimitOption --size $VIDEO_SIZE --bugreport /sdcard/demo.mp4 && adb pull /sdcard/demo.mp4 $videoFile

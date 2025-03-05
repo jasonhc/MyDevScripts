@@ -1,0 +1,7 @@
+103.52.174.221 api-oeco-itv.cp21.ott.cibntv.net
+103.52.174.221 api-oeco-itv-letv.yysh.mgtv.com
+103.52.174.221 upgrade.itv.letv.com
+103.52.174.221 upgrade.itv.cp21.ott.cibntv.net
+103.52.174.221 ug-itv.cp21.ott.cibntv.net
+103.52.174.221 ug-itv-letv.yysh.mgtv.com
+103.52.174.221 ug-itv.letv.com

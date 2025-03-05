@@ -1,0 +1,7 @@
+# Remove file(s) from HEAD commit
+# Usage: git-rm-xxx <filesToRemove>
+
+fileToRemove=$*
+
+git checkout HEAD^ $fileToRemove
+git commit --amend -C HEAD

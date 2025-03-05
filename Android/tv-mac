@@ -1,0 +1,3 @@
+macAddr=$(adb shell cat /sys/class/net/eth0/address | tr -d ":")
+echo $macAddr
+echo $macAddr | tr -d '\n' | pbcopy

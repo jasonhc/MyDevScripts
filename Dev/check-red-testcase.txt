@@ -1,0 +1,21 @@
+* test case 1:
+a
+b
++     
+d
+e
+
+* test case 2:
+a
+b
++  test   
+d
+e
+
+* test case 3:
+a
+b
++tab at end		
+d
+e
+

@@ -1,0 +1,13 @@
+# 实现一个方法, 根据系统属性ro.build.version.release, 判断Android系统版本
+function getAndroidRelease() {
+    local android_release=$(adb shell getprop ro.build.version.release)
+    return ${android_release%%\.*}
+}
+
+echo "---------- Tasks List"
+getAndroidRelease
+if [ "$?" == "12" ]; then
+  adb shell dumpsys activity activities | sed -n '/Task display areas in top down Z order/,/no ScreenRotationAnimation/p'
+else
+  adb shell dumpsys activity activities | sed -n '/Running activities/,/Run #0/p'
+fi

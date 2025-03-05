@@ -1,0 +1,19 @@
+# Usage: show-focused-view
+
+focusedActivity=$(adb shell dumpsys window | fgrep mFocusedWindow | egrep -o "\S+/[^}]+")
+focusedApp=${focusedActivity%/*}
+
+echo focusedApp=$focusedApp
+echo
+
+focusedView=$(android-dump-view-hierarchy $focusedApp | egrep "\{\S+? \S+? (R|\.)F(S|\.)")
+if [ "$focusedView" ]; then
+    echo "# Focused view: "
+    echo $focusedView
+else
+    echo "!! There is no focused view in current Activity."
+fi
+
+echo
+echo "# Focused view with 2 parent views: "
+android-dump-view-hierarchy $focusedApp | egrep -B 2 "\{\S+? \S+? (R|\.)F(S|\.)"

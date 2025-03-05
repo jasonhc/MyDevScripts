@@ -1,0 +1,14 @@
+    if [ $# -lt 2 ]; then
+        echo "Usage: mreplace sed_expression \"<file wildcard>\""
+        echo "Note:  wildcard of files to be replaced must be enclosed by \"\", e.g. \"*cpp\""
+        exit
+    fi
+
+    sed_expr=$1
+    shift
+    for afile in $*
+    do
+        echo replace text in file $afile - $sed_expr
+        # sed -E -i '' "$sed_expr" $afile
+        sed -E -i.bak "$sed_expr" $afile
+    done

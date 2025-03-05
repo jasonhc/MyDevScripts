@@ -1,0 +1,6 @@
+# 把电视的代理设置为本机ip(电脑连接有线网)
+myIp=$(ifconfig en4 | grep "inet " | cut -f2 -d ' ')
+# 把电视的代理设置为本机ip(电脑连接无线网)
+# myIp=$(ifconfig en0 | grep "inet " | cut -f2 -d ' ')
+echo "Set http proxy of TV to ${myIp}:8888"
+adb shell settings put global http_proxy "${myIp}:8888"

@@ -1,0 +1,9 @@
+# Usage: cap-activity-screen.sh [postfix of filename]
+
+echo "Usage: cap-activity-screen.sh [postfix of filename]"
+postfix=$1
+activityName=$(adb shell dumpsys window | fgrep mFocusedWindow | sed -E 's/.+com\.stv\.t2\.account\/com\.stv\.t2\.account\.activity\.(.+Activity)}.*/\1/')
+
+adb shell  screencap /sdcard/screen.png
+adb pull /sdcard/screen.png $activityName-$postfix.png
+

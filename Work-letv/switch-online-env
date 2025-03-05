@@ -1,0 +1,8 @@
+# switch to online environment
+android-remount
+
+adb shell 'echo "127.0.0.1 localhost" > /etc/hosts'
+adb shell setprop debug.letv.upgrade.downloadUrl g3
+
+echo "switch to online environment"
+adb shell cat /etc/hosts

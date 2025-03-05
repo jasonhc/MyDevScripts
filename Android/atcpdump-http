@@ -1,0 +1,11 @@
+# dump packets which has payload bytes (not including ip&tcp header)
+# Usage: atcpdump-http <filter expression>
+
+myFilter=""
+if [ $# -ge 1 ]; then
+  myFilter="($1) and"
+fi
+
+adb shell tcpdump -A -s 0 \""$myFilter (tcp[((tcp[12:1] & 0xf0) >> 2):4] = 0x504f5354 or tcp[((tcp[12:1] & 0xf0) >> 2):4] = 0x47455420) and (((ip[2:2] - ((ip[0]&0xf)<<2)) - ((tcp[12]&0xf0)>>2)) != 0)"\"
+# adb shell tcpdump -A -s 0 \""$myFilter (tcp dst port 80) and (tcp[((tcp[12:1] & 0xf0) >> 2):4] = 0x504f5354 or tcp[((tcp[12:1] & 0xf0) >> 2):4] = 0x47455420) and (((ip[2:2] - ((ip[0]&0xf)<<2)) - ((tcp[12]&0xf0)>>2)) != 0)"\"
+# adb shell tcpdump -A -s 0 \""tcp dst port 80 and tcp[((tcp[12:1] & 0xf0) >> 2):4] = 0x47455420 and (((ip[2:2] - ((ip[0]&0xf)<<2)) - ((tcp[12]&0xf0)>>2)) != 0)"\"

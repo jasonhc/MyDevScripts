@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+if [ $# -lt 1 ]; then
+    echo "Usage: asn <index of device>(start from 1) <adb shell command>..."
+    exit 1
+fi
+
+iDevice=$1
+shift
+
+adb -s $(~/tools/adb_helper/get_android_serial.sh $iDevice) shell $*

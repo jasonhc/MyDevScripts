@@ -1,0 +1,8 @@
+# Usage: xxx <apk file>
+
+if [ $# -lt 1 ]; then
+    echo "Usage: show-apk-sign <apk file>"
+    exit 1
+fi
+
+~/android_sdk_mac/build-tools/29.0.2/apksigner verify --print-certs -v $1 | egrep -v "^(WARNING:|Verified)"

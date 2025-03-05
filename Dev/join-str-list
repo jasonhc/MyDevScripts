@@ -1,0 +1,22 @@
+# Usage: <command> | join-str-list [<delimiter>]
+#   join output of "command" into a string
+#   <delimiter>,  default is ','
+strArray=$(</dev/stdin)
+
+if [ $1 ]; then
+  delimiter=$1
+else
+  delimiter=","
+fi
+
+joinedStr=""
+firstStr="true"
+for str in ${strArray[@]} ; do
+  if [ ! $firstStr ]; then
+      joinedStr+=$delimiter
+  fi
+  joinedStr+=$str
+  firstStr=""
+done
+
+echo $joinedStr

@@ -1,0 +1,21 @@
+
+if [ $# -lt 2 ]; then
+    echo "Usage: test-partial-apk <partial apk> <full apk>"
+    exit 1
+fi
+
+partialFile=$1
+fullFile=$2
+
+if [ ! -e $partialFile -o ! -e $fullFile ]; then
+    echo "Partial or full file not exist."
+    exit 1
+fi
+
+size=$(stat -f '%z' $partialFile)
+echo "size=$size"
+
+cp $fullFile $fullFile.truncate
+truncate -s $size $fullFile.truncate
+echo "Test whether partial apk is correct (empty output means correct)"
+diff $partialFile $fullFile.truncate

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+if [ $# -lt 2 ]; then
+    echo "Usage: gsquashto <upstream of first commit>(name of base branch) <commit message>"
+    exit 1
+fi
+
+#dryRun="echo"
+upstreamBranch=$1
+commitMsg=$2
+
+baseCommit=$(git merge-base HEAD $upstreamBranch)
+$dryRun git reset --soft $baseCommit
+$dryRun git commit -m "$commitMsg"
+

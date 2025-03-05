@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+if [ $# -lt 2 ]; then
+    echo "Usage: adsn <index of device>(start from 1) <path to shell script> <script arg1>..."
+    exit 1
+fi
+
+SCRIPT_PATCH_FILE=~/tools/adb_helper/patched_script
+iDevice=$1
+scriptFile=$2
+shift 2
+
+deviceSerial=$(~/tools/adb_helper/get_android_serial.sh $iDevice)
+sed "s/adb/adb -s $deviceSerial /" $scriptFile > $SCRIPT_PATCH_FILE
+
+# Execute the patched script
+$SCRIPT_PATCH_FILE $*

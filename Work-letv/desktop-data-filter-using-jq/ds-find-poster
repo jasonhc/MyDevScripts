@@ -1,0 +1,4 @@
+# Usage: ds-find-poster <start part of poster's name>
+
+jq "..|(.positionData[][])?,(.blockData[])? | select(.name|startswith(\"$1\"))"
+# jq "..|(.positionData[][])?,(.blockData[])? | if .name==\"$1\" then . else empty end"

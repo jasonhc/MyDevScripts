@@ -1,0 +1,12 @@
+# Usage: ds-select-poster <jq's select expression> [<items to show>](item name is seperated with ',')
+
+if [ $# -lt 1 ]; then
+  echo "Usage: ds-select-poster <jq's select expression> [<items to show>](item name is seperated with ',')"
+  exit 1
+fi
+
+if [ $# -ge 2 ]; then
+  itemsToShow="|{$2}"
+fi
+
+jq "..|(.positionData[][])?,(.blockData[])? | select($1) $itemsToShow"

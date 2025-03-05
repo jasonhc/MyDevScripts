@@ -1,0 +1,4 @@
+
+# Usage: spkg <package name>
+
+adb shell dumpsys package $1 | grep -A 15 "Package \[$1\]"

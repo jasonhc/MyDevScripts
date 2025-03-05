@@ -1,0 +1,41 @@
+# Usage: xxx <history count> <file> <start line> [<line numbers>]
+# TODO: blame多行代码的处理.
+
+# Outputs: blameCommit, 本次修改的commit id
+#          blameLineNumber, 该行在上一次commit中的行号
+function parseBlameResult() {
+    local blameResult=$1
+
+    blameCommit=$(echo $blameResult | cut -f1 -d ' ')
+    blameLineNumber=$(echo $blameResult | cut -f2 -d ' ')
+}
+
+if [ $# -lt 3 ]; then
+    echo "Usage: xxx <history count> <file> <start line> [<line numbers>]"
+    exit 1
+fi
+
+historyCount=$1
+filePath=$2
+startLine=$3
+if [ $# -ge 4 ]; then
+    lineNumbersArg=",+$4"
+else
+    lineNumbersArg=",+1"
+fi
+
+declare -i count
+count=$historyCount
+while [ $count -gt 0 ]; do
+    echo "\n----------------------"
+#    echo "git blame -nw -L$startLine$lineNumbersArg $revisionArg $filePath"
+    lastBlameResult=$(git blame -nw -L$startLine$lineNumbersArg $revisionArg $filePath)
+    parseBlameResult "$lastBlameResult"
+    echo $lastBlameResult
+    echo "blameCommit: $blameCommit, blameLineNumber: $blameLineNumber"
+    git log --oneline -1 $blameCommit | grep --color=auto ""
+    startLine=$blameLineNumber
+    revisionArg="${blameCommit}~"
+
+    let count=$count-1
+done

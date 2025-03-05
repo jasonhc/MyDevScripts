@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+
+# V1
+# V2: 支持长按按键
+
+# Send key events to Android device.
+# Usage: sk [-file] <key file | "a series of key texts">
+#  key text: ["left"]="DPAD_LEFT" ["right"]="DPAD_RIGHT" ["up"]="DPAD_UP" ["down"]="DPAD_DOWN" ["enter"]="DPAD_CENTER" ["back"]="BACK" ["backspace"]="DEL"
+#            ["l"]="DPAD_LEFT" ["r"]="DPAD_RIGHT" ["u"]="DPAD_UP" ["d"]="DPAD_DOWN" ["e"]="DPAD_CENTER" ["b"]="BACK" ["bs"]="DEL"
+#            ["home"]="HOME" ["setting"]="SETTINGS" ["menu"]="MENU"
+#  key text could be "<keyname|keycode>#count", e.g., left#4, 22#4, or "-<delay seconds>". "-" means use a new adb shell command (input keyevent) to send keys for some delay between keys.
+#    or "%<keyname|keycode>": long press a key
+#    or "^<keyname|keycode>": simulate key event with long pressing (using on Android 8)
+
+function simulateKeyByLongPress() {
+  local keyCode=$1
+  adb shell sendevent /dev/input/event0 1 $keyCode 1
+  adb shell sendevent /dev/input/event0 0 0 0
+  adb shell sendevent /dev/input/event0 1 $keyCode 0
+  adb shell sendevent /dev/input/event0 0 0 0
+}
+
+function sendLongPressKeyEvent() {
+  local keyCode=$1
+  adb shell sendevent /dev/input/event0 1 $keyCode 1
+  adb shell sendevent /dev/input/event0 0 0 0
+  sleep 1
+  adb shell sendevent /dev/input/event0 1 $keyCode 0
+  adb shell sendevent /dev/input/event0 0 0 0
+}
+
+#dryRun="echo"
+
+declare fileFlag="n"
+while [ "${1:0:1}" == "-" ]; do
+    if [ "$1" == "-file" ]; then
+        fileFlag="y"
+    fi
+    shift
+done
+
+if [ $# -lt 1 ]; then
+    echo "Usage: sk [-file] <key file | key texts>"
+    exit 1
+fi
+
+declare allKeysStr
+if [ $fileFlag = "y" ]; then
+    allKeysStr=$(cat $1)
+else
+    allKeysStr=$@
+fi
+
+# declare -A keyCodeMap=(["left"]="21" ["right"]="22" ["up"]="19" ["down"]="20" ["enter"]="23" ["back"]="4" ["l"]="21" ["r"]="22" ["u"]="19" ["d"]="20" ["e"]="23" ["b"]="4" ["bs"]=67)
+declare -A keyCodeMap=(["left"]="DPAD_LEFT" ["right"]="DPAD_RIGHT" ["up"]="DPAD_UP" ["down"]="DPAD_DOWN" ["enter"]="DPAD_CENTER" ["back"]="BACK" ["backspace"]="DEL"
+                       ["l"]="DPAD_LEFT" ["r"]="DPAD_RIGHT" ["u"]="DPAD_UP" ["d"]="DPAD_DOWN" ["e"]="DPAD_CENTER" ["b"]="BACK" ["bs"]="DEL"
+                       ["home"]="HOME" ["setting"]="SETTINGS" ["menu"]="MENU" ["power"]="POWER")
+declare -A driverKeyCodeMap=(["e"]="28" ["d"]=108 ["u"]=103 ["l"]=105 ["r"]=106)
+
+declare -i keyCount
+declare keyCodeOrName
+declare allkeyCodesStr
+
+# echo "Keys: $allKeysStr"
+for keyCodeStr in $allKeysStr
+do
+    echo "# keyCode: $keyCodeStr"
+    if [[ ${keyCodeStr:0:1} == - ]]; then
+        if [[ $allkeyCodesStr ]]; then
+          $dryRun adb shell input keyevent $allkeyCodesStr
+          allkeyCodesStr=""
+        fi
+
+        delaySeconds=${keyCodeStr:1}
+        if [ "$delaySeconds" ]; then
+            $dryRun sleep $delaySeconds
+        fi
+    elif [[ ${keyCodeStr:0:1} == \" ]]; then
+        if [[ $allkeyCodesStr ]]; then
+            $dryRun adb shell input keyevent $allkeyCodesStr
+            allkeyCodesStr=""
+        fi
+
+        $dryRun adb shell input text \'${keyCodeStr:1}\'
+    elif [[ ${keyCodeStr:0:1} == "%" ]]; then
+      if [[ $allkeyCodesStr ]]; then
+          $dryRun adb shell input keyevent $allkeyCodesStr
+          allkeyCodesStr=""
+      fi
+
+      keyCodeOrName=${keyCodeStr:1}
+      if [[ $keyCodeOrName = [0-9]* ]]; then
+          key=$keyCodeOrName
+      else
+          key=${driverKeyCodeMap[$keyCodeOrName]}
+      fi
+      $dryRun sendLongPressKeyEvent $key
+    elif [[ ${keyCodeStr:0:1} == "^" ]]; then
+      if [[ $allkeyCodesStr ]]; then
+          $dryRun adb shell input keyevent $allkeyCodesStr
+          allkeyCodesStr=""
+      fi
+
+      keyCodeOrName=${keyCodeStr:1}
+      if [[ $keyCodeOrName = [0-9]* ]]; then
+          key=$keyCodeOrName
+      else
+          key=${driverKeyCodeMap[$keyCodeOrName]}
+      fi
+      $dryRun simulateKeyByLongPress $key
+    else
+        if [[ $keyCodeStr =~ "#" ]]; then
+            keyCodeOrName=${keyCodeStr%%#*}
+            keyCount=${keyCodeStr##*#}
+        else
+            keyCodeOrName=$keyCodeStr
+            keyCount=1
+        fi
+
+        if [[ $keyCodeOrName = [0-9]* ]]; then
+            key=$keyCodeOrName
+        else
+            key=${keyCodeMap[$keyCodeOrName]}
+        fi
+        while [ $keyCount != 0 ]; do
+            allkeyCodesStr="$allkeyCodesStr $key"
+            keyCount=$keyCount-1
+        done
+    fi
+done
+
+if [[ $allkeyCodesStr ]]; then
+  $dryRun adb shell input keyevent $allkeyCodesStr
+fi

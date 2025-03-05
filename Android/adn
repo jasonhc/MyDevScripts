@@ -1,0 +1,9 @@
+if [ $# -lt 2 ]; then
+    echo "Usage: adn <index of device>(start from 1) <adb command>..."
+    exit 1
+fi
+
+iDevice=$1
+shift
+
+adb -s $(~/tools/adb_helper/get_android_serial.sh $iDevice) $*

@@ -1,0 +1,4 @@
+# dump packets which has payload bytes (not including ip&tcp header)
+# Usage: atcpdump <filter expression>
+
+adb shell tcpdump -A -s 0 \""($1) and (((ip[2:2] - ((ip[0]&0xf)<<2)) - ((tcp[12]&0xf0)>>2)) != 0)"\"

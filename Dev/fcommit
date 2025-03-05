@@ -1,0 +1,15 @@
+
+if [ $# -lt 1 ]; then
+    echo "Usage: fcommit <commit message (regexp)>, ignore case"
+    exit 1
+fi
+
+git log -E --all --grep=$1 | grep ""
+
+echo ""
+echo "### stash commits"
+git stash list | egrep $1
+
+echo ""
+echo "### Branches ---"
+git branch | grep $1

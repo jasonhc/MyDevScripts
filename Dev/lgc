@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+# 自动增加 build.gradle 中的版本号, 然后 commit 代码, commit 时自动生成 commit message
+# 先把待提交文件放入 stage 区, 然后执行本脚本.
+# 适用于 Launcher 和账号APP
+# Usage: lgc <commit arg>
+
+GRADLE_FILE="build.gradle"
+GRADLE_FILE_2="app/build.gradle"
+COMMIT_MSG_TEMPLATE_FILE=~/.gitmessage_template
+COMMIT_MSG_FILE=~/.gitmessage
+
+function checkBuildGradle() {
+  if [ -e $GRADLE_FILE ]; then
+    buildGradlePath=$GRADLE_FILE
+  elif [ -e $GRADLE_FILE_2 ]; then
+    buildGradlePath=$GRADLE_FILE_2
+  fi
+}
+
+function increaseVersion() {
+  local version=$1
+  local nLeadingZero=$2
+
+  newVersionName=$((10#$version + 1))
+  newVersionName=$(printf "%0${nLeadingZero}d" $newVersionName)
+  echo $newVersionName
+}
+
+function handleVersionName() {
+  local versionName=${versionNameStatement#*versionName \"}
+  local minorVersionName=${versionName#*.*.*.}
+  local newMinorVersionName=$(increaseVersion $minorVersionName 3)
+  local newVersionName=${versionName/$minorVersionName/$newMinorVersionName}
+
+  sed -E -i '' "s/versionName \"$versionName/versionName \"$newVersionName/" $buildGradlePath
+
+  echo $newVersionName
+}
+
+function handleVersionDebug() {
+  local versionName=${versionProductStatement#def VERSION_PRODUCT*= \"}
+  local minorVersionName=${versionDebugStatement#def VERSION_DEBUG = VERSION_PRODUCT + \"}
+  local newMinorVersionName=$(increaseVersion ${minorVersionName#.} 3)
+
+  sed -E -i '' "s/= VERSION_PRODUCT \+ \"$minorVersionName/= VERSION_PRODUCT + \".$newMinorVersionName/" $buildGradlePath
+
+  echo "$versionName.$newMinorVersionName"
+}
+
+checkBuildGradle
+if [ ! $buildGradlePath ]; then
+  echo "'build.gradle' not found, should exec this script under root dir of project"
+  exit 1
+fi
+
+newVersionName=""
+versionNameStatement=$(egrep -o "^\s+versionName \"[^\"]+" $buildGradlePath)
+if [ "$versionNameStatement" ]; then
+  newVersionName=$(handleVersionName)
+else
+  versionDebugStatement=$(egrep -o "^def\s+VERSION_DEBUG\s+=.+\"[^\"]+" $buildGradlePath)
+  versionProductStatement=$(egrep -o "^def\s+VERSION_PRODUCT.+=.+\"[^\"]+" $buildGradlePath)
+  if [ "$versionDebugStatement" ]; then
+    newVersionName=$(handleVersionDebug)
+  fi
+fi
+
+cp $COMMIT_MSG_TEMPLATE_FILE $COMMIT_MSG_FILE
+echo $newVersionName >> $COMMIT_MSG_FILE
+
+git add $buildGradlePath
+git commit --file ~/.gitmessage -e $@

@@ -1,0 +1,19 @@
+if [ $# -lt 2 ]; then
+    echo "Usage: xxx <loop interval (seconds)> <command>"
+    exit 1
+fi
+
+interval=$1
+command=$2
+
+while [ "a" ]
+do
+#    echo "command: $command"
+    date
+    $command
+    echo
+    echo "--------------------------------------------------"
+    echo
+    sleep $interval
+done
+

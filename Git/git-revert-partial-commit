@@ -1,0 +1,18 @@
+
+# Revert some files in a previous commit
+# Usage: git-revert-partial-commit <commit id> <file1>...
+
+if [ $# -lt 2 ]; then
+    echo "Usage: revert-commit-partial <commit id> <file1>..."
+    exit 0
+fi
+
+COMMIT_ID=$1
+shift
+
+echo commit_id=$COMMIT_ID
+for file in $@
+do
+    echo revert file $file
+    git show $COMMIT_ID:$file > $file
+done

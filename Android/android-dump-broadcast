@@ -1,0 +1,28 @@
+# Usage: dump-xxx start|stop
+# The steps as below:
+# 1. run 'dump-android-broadcast start' to start recording;
+# 2. run some use case on TV;
+# 3. run 'dump-android-broadcast stop' to show sent broadcasts.
+
+if [ $# -lt 1 ]; then
+    echo "Usage: dump-xxx start|stop"
+    exit 1
+fi
+
+TMP_DIR=~/work/tmp/
+RECORDS_DUMP_FILE=${TMP_DIR}/android-broadcast-records.txt
+DUMP_BROADCAST_COMMAND='adb shell dumpsys activity broadcasts | sed -n "/Historical broadcasts \[background\]:/,/Historical broadcasts summary \[background\]:/p" | fgrep "BroadcastRecord"'
+
+command=$1
+if [ "$command" == "start" -o "$command" == "stop" ]; then
+  if [ "$command" == "start" ]; then
+    echo "Start recording broadcasts."
+    $DUMP_BROADCAST_COMMAND > $RECORDS_DUMP_FILE
+  else
+    echo "Stop recording, show broadcasts sent just now:"
+    $DUMP_BROADCAST_COMMAND | diff -u $RECORDS_DUMP_FILE - | egrep "^\+\s+BroadcastRecord"
+  fi
+else
+  echo "Wrong command argument!"
+  echo "Usage: dump-xxx <start|stop>"
+fi

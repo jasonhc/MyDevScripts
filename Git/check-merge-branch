@@ -1,0 +1,48 @@
+
+# Check merge result for merging/rebasing a branch, can specify only checking some files.
+# Check if a rebase is correct by comparing patch files responding to 2 commits.
+# Rebase is OK if no output or only empty lines is output.
+# @author hechuan, 2015/11/17
+
+if [ $# -lt 2 ]; then
+    echo "Check merge result for merging/rebasing a branch, can specify only checking some files"
+    echo "Usage: check-merge <branch to be merged/rebased> <new_commit_rebased> [<files to check>]"
+    echo "       check-merge <branch to be merged/rebased> - (changes not commit) [<files to check>]"
+    echo "       check-merge <branch to be merged/rebased> -- (changes not commit in stage area) [<files to check>]"
+    exit 0
+fi
+
+EXTRACT_WRONG_MERGE_REGEX="^[+-][-+][^+-]"
+#EXTRACT_WRONG_MERGE_REGEX="^[+][-+][^+-]"
+MERGED_BRANCH=$1
+COMMIT_REBASE=$2
+TEMP_PATCH_DIR=~/work/tmp
+shift 2
+
+MERGE_BASE_COMMIT=$(git merge-base HEAD $MERGED_BRANCH)
+COMMIT_REBASE_PARENT=${COMMIT_REBASE}^2
+echo Merge branch $MERGED_BRANCH, base commit: $MERGE_BASE_COMMIT
+
+if [ $# -ne 0 ]; then
+    CHANGED_FILES="$@"
+else
+    CHANGED_FILES=""
+#    CHANGED_FILES=$(git diff --name-status $MERGE_BASE_COMMIT $MERGED_BRANCH | grep "^M" | cut -f2)
+fi
+echo CHANGED_FILES=$CHANGED_FILES
+git diff -w $MERGE_BASE_COMMIT $MERGED_BRANCH > $TEMP_PATCH_DIR/check-merge-tmp-patch.patch
+#git diff -w $MERGE_BASE_COMMIT $MERGED_BRANCH "$CHANGED_FILES" > $TEMP_PATCH_DIR/check-merge-tmp-patch.patch
+
+echo "Rebase check result... (Rebase is OK if no output or only empty lines is output)"
+echo ""
+if [ "$COMMIT_REBASE" = "-" ]; then
+    # echo "changes not commit"
+    CHANGES_AFTER_MERGE=""
+elif [ "$COMMIT_REBASE" = "--" ]; then
+    # echo "changes not commit in stage area"
+    CHANGES_AFTER_MERGE="--cached"
+else
+    CHANGES_AFTER_MERGE="$COMMIT_REBASE_PARENT $COMMIT_REBASE"
+fi
+git diff -w $CHANGES_AFTER_MERGE | diff -uw $TEMP_PATCH_DIR/check-merge-tmp-patch.patch - | grep --color=auto -E $EXTRACT_WRONG_MERGE_REGEX
+#git diff -w $CHANGES_AFTER_MERGE "$CHANGED_FILES" | diff -uw $TEMP_PATCH_DIR/check-merge-tmp-patch.patch - | grep --color=auto -E $EXTRACT_WRONG_MERGE_REGEX

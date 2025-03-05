@@ -1,0 +1,39 @@
+#! /bin/bash
+# Version 2: extract "judge whether magic tool file exists" to a function
+# Version 1: implement function - root lephone automatically
+
+TOOL_PATH=${0%/*}
+MAGIC_NUM_TOOL_DIR=/data/local/tmp
+MAGIC_NUM_TOOL_FILENAME=adb_magic
+MAGIC_NUM_TOOL_FULL_PATH=$MAGIC_NUM_TOOL_DIR/$MAGIC_NUM_TOOL_FILENAME
+
+# return 0 if file exists, return 1 otherwise
+function adb_file_exists
+{
+    FILE_LS_RESULT=$(adb shell ls $1 | tr -d "\r")
+    if [ "$FILE_LS_RESULT" == "$1" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# check whether magic number tool exists on the phone
+adb_file_exists $MAGIC_NUM_TOOL_FULL_PATH
+if [ $? != 0 ]; then
+    adb push $TOOL_PATH/$MAGIC_NUM_TOOL_FILENAME $MAGIC_NUM_TOOL_DIR
+fi
+
+# get the magic number
+MAGIC_NUM=$(adb shell $MAGIC_NUM_TOOL_FULL_PATH | sed -E -n "s/magic_num=([0-9]+)\./\\1/p")
+echo magic number is: $MAGIC_NUM
+exit 1
+
+# root the phone using the magic number
+adb shell setprop debug.service.info $MAGIC_NUM
+adb shell setprop service.adb.root 1
+adb kill-server
+adb start-server
+
+echo "The phone is rooted successfully."
+

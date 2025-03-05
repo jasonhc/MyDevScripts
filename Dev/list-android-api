@@ -1,0 +1,11 @@
+# Usage: list-android-api <project root path>
+#        <project root path>  default is current directory
+
+if [ "$1" = "" ]; then
+  rootPath="."
+else
+  rootPath="$1"
+fi
+
+egrep -rh --include="*.java" --include="*.kt" "^import androidx?\." $rootPath | sort | uniq
+

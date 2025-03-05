@@ -1,0 +1,12 @@
+
+# Usage: ./android-show-apk-info <apk-file>
+
+AAPT=~/android_sdk_mac/build-tools/29.0.2/aapt
+
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <apk-file>"
+    exit 1
+fi
+
+$AAPT dump xmltree $1 AndroidManifest.xml | egrep "package=|android:versionName"
+

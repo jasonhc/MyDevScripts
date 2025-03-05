@@ -1,0 +1,61 @@
+
+# Check if a rebase is correct by comparing patch files responding to 2 commits.
+# Rebase is OK if no output or only empty lines is output.
+# @author hechuan, 2015/11/17
+
+# return 0 if parameter obj is a branch
+function is_git_branch
+{
+    CHECK_BRANCH_RESULT=$(git branch | grep $1)
+    if [ "$CHECK_BRANCH_RESULT" == "" ]; then
+        return 1;
+    else
+        return 0;
+    fi
+}
+
+if [ $# -lt 2 ]; then
+    echo "Check merge result for merging a branch, can speicfy only checking some files"
+    echo "Usage: check-merge <commit>|<branch to be merged> <commit_rebased> [<files to check>]"
+    echo "       check-merge <commit>|<branch to be merged> - (changes not commit) [<files to check>]"
+    echo "       check-merge <commit>|<branch to be merged> -- (changes not commit in stage area) [<files to check>]"
+    exit 0
+fi
+
+EXTRACT_WRONG_MERGE_REGEX="^[+-][-+][^+-]"
+#EXTRACT_WRONG_MERGE_REGEX="^[+][-+][^+-]"
+COMMIT_OR_BRANCH=$1
+COMMIT_REBASE=$2
+TEMP_PATCH_DIR=~/work/tmp
+shift 2
+
+is_git_branch $COMMIT_OR_BRANCH
+if [ $? = 0 ]; then
+    MERGE_BASE_COMMIT=$(git merge-base HEAD $COMMIT_OR_BRANCH)
+    COMMIT_REBASE_PARENT=${COMMIT_REBASE}^2
+    echo Merge branch $COMMIT_OR_BRANCH, base commit: $MERGE_BASE_COMMIT
+else
+    MERGE_BASE_COMMIT=${COMMIT_OR_BRANCH}^
+    COMMIT_REBASE_PARENT=${COMMIT_REBASE}^
+    echo Cherry-pick commit $COMMIT_OR_BRANCH
+fi
+if [ $# -ne 0 ]; then
+    CHANGED_FILES="$@"
+else
+    CHANGED_FILES=$(git diff --name-status $MERGE_BASE_COMMIT $COMMIT_OR_BRANCH | grep "^M" | cut -f2)
+fi
+echo CHANGED_FILES=$CHANGED_FILES
+git diff -w $MERGE_BASE_COMMIT $COMMIT_OR_BRANCH "$CHANGED_FILES" > $TEMP_PATCH_DIR/check-merge-tmp-patch.patch
+
+echo "Rebase check result... (Rebase is OK if no output or only empty lines is output)"
+echo ""
+if [ "$COMMIT_REBASE" = "-" ]; then
+    # echo "changes not commit"
+    CHANGES_AFTER_MERGE=""
+elif [ "$COMMIT_REBASE" = "--" ]; then
+    # echo "changes not commit in stage area"
+    CHANGES_AFTER_MERGE="--cached"
+else
+    CHANGES_AFTER_MERGE="$COMMIT_REBASE_PARENT $COMMIT_REBASE"
+fi
+git diff -w $CHANGES_AFTER_MERGE $CHANGED_FILES | diff -uw $TEMP_PATCH_DIR/check-merge-tmp-patch.patch - | grep --color=auto -E $EXTRACT_WRONG_MERGE_REGEX

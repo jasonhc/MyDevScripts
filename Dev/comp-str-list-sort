@@ -1,0 +1,46 @@
+# 比较2个 string list 文本, list 中的字串默认用","分隔
+# Usage: compare-xxx [-e] <list1>|- <list2>|- [<delimiter>]
+#   -e  使用图形 diff 工具比较, 否则用 diff 命令比较
+#   <list1> <list2> 用来比较的字符串, '-' 表示使用剪贴板里的字符串
+#   <delimiter> 默认是 ","
+
+# Version 1:
+# Version 2: can compare string on clipboard, using arg '-'
+
+externalToolFlag="off"
+while [ "${1:0:1}" == "-" -a ${#1} -gt 1 ]; do
+    if [ "$1" == "-e" ]; then
+        externalToolFlag="on"
+    fi
+    shift
+done
+
+if [ $# -lt 2 ]; then
+    echo "Usage: compare-xxx [-e] <list1>|- <list2>|- [<delimiter>]"
+    exit 1
+fi
+
+str1=$1
+str2=$2
+if [ "$str1" = "-" ]; then
+    str1=$(pbpaste)
+fi
+if [ "$str2" = "-" ]; then
+    str2=$(pbpaste)
+fi
+if [ $3 ]; then
+  delimiter=$3
+else
+  delimiter=","
+fi
+TMP_DIR=~/tools/tmp
+
+echo $str1 | tr "$delimiter" "\n" | sort > $TMP_DIR/text1
+echo $str2 | tr "$delimiter" "\n" | sort > $TMP_DIR/text2
+
+if [ $externalToolFlag == on ]; then
+    diffCommand="bcomp"
+else
+    diffCommand="diff -u"
+fi
+$diffCommand $TMP_DIR/text1 $TMP_DIR/text2

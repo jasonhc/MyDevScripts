@@ -1,0 +1,28 @@
+# Check whether a class is obfuscated.
+# 执行脚本之前, 先编译APP的release版本.
+# Output of script will be (the class not obfuscated if obfuscated class name is same as original class name):
+#   <class name> -> <obfuscated class name>
+# Usage: xxx <class name> <project root dir>
+#   class name:  can be full class name (com.stv.deskplatform.ui.activity.Launcher) or simple class name (Launcher)
+#   project root dir: e.g., ~/work/launcher/launcher-src/tv-deskplatform
+
+if [ $# -lt 2 ]; then
+    echo "Check whether a class is obfuscated."
+    echo "Usage: xxx <class name> <project root dir>"
+    echo "  class name:  can be full class name (com.stv.deskplatform.ui.activity.Launcher) or simple class name (Launcher)"
+    echo "  project root dir: e.g., ~/work/launcher/launcher-src/tv-deskplatform"
+    echo ""
+    echo "Output of script will be (the class not obfuscated if obfuscated class name is same as original class name):"
+    echo "  <class name> -> <obfuscated class name>"
+    exit 1
+fi
+
+className=$1
+projectRoot=$2
+MAPPING_FILE_PATH="build/outputs/mapping/*Release/mapping.txt"
+
+if [[ ! $className =~ \. ]]; then
+    className=".$className"
+    # echo "ab=$className"
+fi
+egrep "^\S*${className/./\.} ->" $projectRoot/${MAPPING_FILE_PATH}

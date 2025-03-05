@@ -1,0 +1,14 @@
+#!/usr/bin/env zsh
+
+echo "Usage: remove-red-all <java src dir>"
+echo ""
+
+for afile in $1/**/src/**/*.java
+do
+  echo "Remove red in file: $afile"
+  cp $afile $afile.org
+  # sed -E -i .bak "s/[[:space:]]+$//g" $afile
+  # sed -E -i .bak "s/	/    /g" $afile
+  sed -E -i '' "s/[[:space:]]+$//g" $afile
+  sed -E -i '' "s/	/    /g" $afile
+done

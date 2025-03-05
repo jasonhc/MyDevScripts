@@ -1,0 +1,7 @@
+# switch to test environment for dynamic config sdk
+android-remount
+adb shell 'echo "103.52.174.221 api-oeco-itv.cp21.ott.cibntv.net api-oeco-itv-letv.yysh.mgtv.com" >> /etc/hosts'
+
+echo "switch to test environment"
+
+adb shell cat /etc/hosts

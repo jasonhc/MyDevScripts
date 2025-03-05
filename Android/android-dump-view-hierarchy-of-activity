@@ -1,0 +1,13 @@
+# Dump view hierarchy of an activity
+# Usage: dump-xxx <app's package name> <activity name>
+
+if [ $# -lt 2 ]; then
+    echo "Usage: dump-xxx <app's package name> <activity name>"
+    exit 1
+fi
+
+packageName=$1
+activityName=$2
+
+adb shell dumpsys activity $packageName | sed -En "/DecorView@.+\[$activityName\]/,/Looper/p"
+

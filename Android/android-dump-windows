@@ -1,0 +1,2 @@
+echo "---------- Windows List"
+adb shell dumpsys window windows | fgrep -A2 "Window #"

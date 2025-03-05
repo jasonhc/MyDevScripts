@@ -1,0 +1,5 @@
+EXEC_HEADER_FILE=~/tools/jar-exec-header.txt
+
+mv $1 $1.bak
+cat $EXEC_HEADER_FILE $1.bak > $1
+chmod u+x $1

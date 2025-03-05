@@ -1,0 +1,35 @@
+
+# Check if a rebase is correct by comparing patch files responding to 2 commits.
+# Use this script after cherry pick a commit.
+# Rebase is OK if no output or only empty lines is output.
+# @author hechuan, 2015/11/17
+
+if [ $# -lt 2 ]; then
+    echo "Use this script after cherry pick a commit."
+    echo "Usage: check-merge-cp <commit> <new_commit_cherry_picked>"
+    echo "       check-merge-cp <commit> - (changes not commit)"
+    echo "       check-merge-cp <commit> -- (changes not commit in stage area)"
+    exit 0
+fi
+
+EXTRACT_WRONG_MERGE_REGEX="^[+-][-+][^+-]"
+#EXTRACT_WRONG_MERGE_REGEX="^[+][-+][^+-]"
+COMMIT=$1
+COMMIT_REBASE=$2
+TEMP_PATCH_DIR=~/work/tmp
+
+echo Cherry-pick commit $COMMIT
+git diff -w $COMMIT^ $COMMIT > $TEMP_PATCH_DIR/check-merge-tmp-patch.patch
+
+echo "Rebase check result... (Rebase is OK if no output or only empty lines)"
+echo ""
+if [ "$COMMIT_REBASE" = "-" ]; then
+    # echo "changes not commit"
+    CHANGES_AFTER_MERGE=""
+elif [ "$COMMIT_REBASE" = "--" ]; then
+    # echo "changes not commit in stage area"
+    CHANGES_AFTER_MERGE="--cached"
+else
+    CHANGES_AFTER_MERGE="$COMMIT_REBASE^ $COMMIT_REBASE"
+fi
+git diff -w $CHANGES_AFTER_MERGE | diff -uw $TEMP_PATCH_DIR/check-merge-tmp-patch.patch - | grep --color=auto -E $EXTRACT_WRONG_MERGE_REGEX

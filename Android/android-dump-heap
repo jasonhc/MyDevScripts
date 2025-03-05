@@ -1,0 +1,47 @@
+# Usage: xxx [-gc] <app's package name> <heap dump file>
+
+function monitorFileWriteComplete() {
+    filePath=$1
+    while true; do
+        size1=$(adb shell ls -l $filePath | awk '{print $5}')
+        sleep 1
+        size2=$(adb shell ls -l $filePath | awk '{print $5}')
+        if [ "$size1" == "$size2" ]; then
+            break
+        fi
+    done
+}
+
+GC="n"
+while [ "${1:0:1}" == "-" ]; do
+  if [ "$1" == "-gc" ]; then
+    GC="y"
+  fi
+  shift
+done
+
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 [-gc] <app's package name> <.hprof file>"
+    exit 1
+fi
+
+HPROF_PATH=/data/local/tmp/heap.hprof
+
+packageName=$1
+heapDumpFile=$2
+
+pid=$(adb shell ps | fgrep $packageName | awk '{print $2}')
+if [ -z "$pid" ]; then
+    echo "No such process: $packageName"
+    exit 1
+fi
+
+if [ "$GC" == "y" ]; then
+  # force GC
+  echo "force GC"
+  adb shell kill -10 $pid
+fi
+
+adb shell am dumpheap $pid $HPROF_PATH
+monitorFileWriteComplete $HPROF_PATH
+adb pull $HPROF_PATH $heapDumpFile

@@ -1,0 +1,14 @@
+# Usage: xxx 1|0
+#   1, turn on "always_finish_activities"
+#   0, turn off "always_finish_activities"
+
+if [ $# -lt 1 ]; then
+    echo "Usage: xxx 1|0"
+    echo "  1, turn on \"always_finish_activities\""
+    echo "  0, turn off \"always_finish_activities\""
+    exit 1
+fi
+
+adb shell content insert --uri content://settings/global --bind name:s:always_finish_activities --bind value:i:$1
+adb shell am restart
+

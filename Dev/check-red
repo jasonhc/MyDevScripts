@@ -1,0 +1,1 @@
+egrep --color=auto  -C 3 "^\+.*?(\s+$|	+)"

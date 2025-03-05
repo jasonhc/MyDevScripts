@@ -1,0 +1,11 @@
+
+while [ "a" != "" ]
+do
+  for i in {1..5} ; do
+    adb shell input keyevent VOLUME_UP
+  done
+
+  for i in {1..5} ; do
+    adb shell input keyevent VOLUME_DOWN
+  done
+done

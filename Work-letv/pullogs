@@ -1,0 +1,10 @@
+# Usage: pullogs [<log-dir-number>]
+
+echo "Usage: pullogs [<log-dir-number>]"
+logDirNumber="0"
+if [ $# -ge 1 ]; then
+    logDirNumber=$1
+fi
+
+#dryRun="echo"
+$dryRun adb pull /data/Logs/Log.$logDirNumber

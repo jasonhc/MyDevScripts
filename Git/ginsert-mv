@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+# Version 1: Initial version
+# Version 2: simplify parameter, only 1 parameter now
+
+if [ $# -lt 1 ]; then
+    echo "Usage: ginsert-mv -C | <insert pos>"
+    echo "    Amend head of commit of current branch to commit 'insert pos', 把最新的 commit 和指定的 commit合并"
+    exit 1
+fi
+
+continueFlag=off
+while [ "${1:0:1}" == "-" ]; do
+    if [ "$1" == "-C" ]; then
+        continueFlag="on"
+    fi
+    shift
+done
+
+#dryRun="echo"
+
+if [ "$continueFlag" != "on" ]; then
+  insertPos=$(git log --pretty=format:%h -1 $1)
+  currentBranch=$(git name-rev --name-only HEAD)
+else
+  insertPos=$(git log --pretty=format:%h -1 HEAD)
+  currentBranch=$(git name-rev --name-only HEAD)
+  currentBranch=${currentBranch%~*}
+fi
+
+if [ "$continueFlag" != "on" ]; then
+  commitToInsert=$(git log --pretty=format:%h -1 HEAD)
+  $dryRun git checkout $currentBranch
+  $dryRun git reset --keep HEAD~
+
+  $dryRun git checkout $insertPos
+  echo
+  echo "### Cherry-pick the change"
+  $dryRun git cherry-pick $commitToInsert
+  if [ $? -ne 0 ]; then
+      echo
+      echo "### Conflict when cherry pick, stop, should resolve conflict first, then re-exec this script with parameter '-C' (do NOT need parameter 'insertPos')."
+      exit 1
+  fi
+else
+  $dryRun GIT_EDITOR=true git cherry-pick --continue
+fi
+
+echo
+echo "### Rebase commits of the branch"
+$dryRun git rebase --onto HEAD $insertPos $currentBranch

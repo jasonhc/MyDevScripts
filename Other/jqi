@@ -1,0 +1,37 @@
+
+# 使用 jq 命令格式化 json 文件, 直接修改 json 文件, 不把格式化结果输出到标准输出.
+# 参数"json files..."可以使用通配符.
+# Usage: jqi <arg list same as 'jq'> <json files...>(can use wildcards *)
+
+#dryRun="echo"
+
+argStr=""
+#firstArg="true"
+# process "options"
+while [ "${1:0:1}" == "-" ]; do
+#  if [ $firstArg ]; then
+#    argStr="$1"
+#  else
+#    argStr="$argStr $1"
+#  fi
+#  firstArg=""
+  argStr="$argStr $1"
+  shift
+done
+# process "filter"
+#if [ $firstArg ]; then
+#  argStr="$1"
+#else
+#  argStr="$argStr $1"
+#fi
+argStr="$argStr $1"
+shift
+
+#echo argStr=$argStr
+
+for jsonFile in $@
+do
+  echo "Process file $jsonFile..."
+  jq $argStr $jsonFile > $jsonFile.jq
+  mv $jsonFile.jq $jsonFile
+done

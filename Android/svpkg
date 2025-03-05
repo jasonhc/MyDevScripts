@@ -1,0 +1,4 @@
+
+# Usage: svpkg <package name>
+
+adb shell dumpsys package $1 | egrep "version(Code|Name)"

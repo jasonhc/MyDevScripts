@@ -1,0 +1,21 @@
+
+echo "dump-task-stack [device id]"
+
+if [ "$1" == "" ]; then
+    DEVICE_SPECIFY=""
+else
+    DEVICE_SPECIFY="-s $1"
+fi
+
+while [ "a" != "" ]
+do
+    echo
+    echo "---------------------$(date +%H:%M:%S)-----------------------------"
+    echo
+    adb $DEVICE_SPECIFY shell dumpsys activity activities | sed -En -e '/Running activities/,/Run #0/p'
+    echo
+    adb $DEVICE_SPECIFY shell dumpsys activity activities | grep "Activities="
+    echo
+    sleep 3
+done
+

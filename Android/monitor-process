@@ -1,0 +1,13 @@
+
+while [ "a" != "" ]
+do
+    adb shell ps |  egrep "$1"
+    # adb shell ps | egrep "^u0_" | egrep "$1"
+    # adb -s 192.168.70.101:5555 shell ps | egrep "^u0_" | egrep "(leso\.|letv\.)"
+    # adb -s 192.168.70.102:5555 shell ps | egrep "^u0_"
+    echo
+    echo "--------------------------------------------------"
+    echo
+    sleep 1
+done
+

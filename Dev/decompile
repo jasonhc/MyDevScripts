@@ -1,0 +1,130 @@
+# Version 1.5: can deal with multi-dex apk
+# Version 1.4: can add package name in class name (arg2 can be 'com.foo.bar.xxx' or 'com/foo/bar/xxx')
+# Version 1.3: can decompile *.class file; use DECOMPILER env to choose jad/cfr; use OPTIONS env to set option of decompiler
+# Version 1.2: add flag "-n"
+# Version 1.1: Use cfr to decompile java class; add flag "-f"
+#
+
+DEX2JAR=~/work/android_dev_tools/dex2jar-2.1/d2j-dex2jar.sh
+CFR=~/work/android_dev_tools/cfr.jar
+JAD=~/work/android_dev_tools/jad158/jad
+
+function getClassJarFile() {
+
+  local archiveFilePath=$1
+  local forceRefreshFlag=$2
+  local classJarFiles=""
+  fileExt=${archiveFilePath##*\.}
+
+  case $fileExt in
+  apk)
+    if [ "$forceRefreshFlag" == "n" ]; then
+      test -e classes.dex || unzip "$archiveFilePath" "classes*.dex"
+      test -e classes-dex2jar.jar || $DEX2JAR classes*.dex
+    else
+      unzip -o "$archiveFilePath" "classes*.dex"
+      $DEX2JAR -f classes*.dex
+    fi
+    classJarFiles=$(ls classes*-dex2jar.jar | tr '\n' ' ')
+    ;;
+
+  aar)
+    if [ "$forceRefreshFlag" == "n" ]; then
+      test -e classes.jar || unzip "$archiveFilePath" classes.jar
+    else
+      unzip -o "$archiveFilePath" classes.jar
+    fi
+    classJarFiles="classes.jar"
+    ;;
+
+  jar)
+    classJarFiles=$archiveFilePath
+    ;;
+  esac
+
+  echo "$classJarFiles"
+}
+
+declare forceRefresh="n"
+declare notDecompile="n"
+while [ "${1:0:1}" == "-" ]; do
+  if [ "$1" == "-f" ]; then
+    forceRefresh="y"
+  elif [ "$1" == "-n" ]; then
+    notDecompile="y"
+  fi
+  shift
+done
+
+if [ $# -lt 1 ]; then
+  echo "Usage: decompile [-f] [-n] <path to apk|aar|jar|class file> <java class name> [<work dir for decompile>]"
+  echo "-f  force extracting class file even if it is already there"
+  echo "-n  not decompile the class, only test whether class exists"
+  echo "    use DECOMPILER env to choose JAD/CFR, use OPTIONS env to set option of decompiler"
+  exit 1
+fi
+
+archiveFilePath=$1
+javaClassName=$2
+if [ $# -eq 3 ]; then
+  workDir=$3
+  test -d $workDir || mkdir -p $workDir
+  cd $workDir || exit 1
+else
+  workDir="."
+fi
+
+if [ "$forceRefresh" == "y" ]; then
+  echo "Remove intermediate files..."
+  rm -rf classes
+  rm -f classes*.dex
+  rm -f classes*-dex2jar.jar
+fi
+
+fileExt=${archiveFilePath##*\.}
+if [ "$fileExt" != "class" ]; then
+  classJarFiles=$(getClassJarFile "$archiveFilePath" $forceRefresh | tail -1)
+  if [ -z "$classJarFiles" ]; then
+    echo "Error: wrong file, should be apk, aar, or jar file"
+    exit 1
+  fi
+
+  test -d classes || mkdir classes
+
+  classFilePath=${javaClassName//./\/}.class
+  if [ $notDecompile == y ]; then
+    for classJar in $classJarFiles; do
+      unzip -l "$classJar" "*$classFilePath"
+    done
+    exit 0
+  else
+    for classJar in $classJarFiles; do
+      echo "Unzip jar: $classJar"
+      unzip -o -d classes "$classJar" "*$classFilePath"
+      if [[ $? == 0 ]]; then
+        break
+      fi
+    done
+
+    # zsh 语法
+    #java -jar $CFR classes/**/$javaClassName.class
+    simpleClassName=${javaClassName##*/}
+    simpleClassName=${simpleClassName##*.}
+    classFile=$(find ./classes -type f -name "${simpleClassName}.class")
+  fi
+else
+  classFile=$archiveFilePath
+  classFilename=${archiveFilePath##*\/}
+  javaClassName=${classFilename%\.*}
+fi
+
+test -d src || mkdir src
+
+if [ "$DECOMPILER" = "CFR" ]; then
+  java -jar $CFR $classFile $OPTIONS >src/$simpleClassName.java
+elif [ "$DECOMPILER" = "JAD" ]; then
+  $JAD -o -sjava -d src $classFile
+else
+  java -jar $CFR $classFile $OPTIONS >src/$simpleClassName.java
+fi
+cat src/$simpleClassName.java

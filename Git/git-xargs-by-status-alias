@@ -1,0 +1,28 @@
+# Usage: git-xargs-by-status <status> <command>
+
+if [ $# -lt 2 ]; then
+    echo "Usage: git-xargs-by-status <status> <command>"
+    echo "  all status:"
+    echo '  " M":   modified in work tree'
+    echo '  " D":   deleted in work tree'
+    echo '  "M ":   modified in index'
+    echo '  "A ":   added to index           '
+    echo '  "D ":   deleted from index       '
+    echo '  "R ":   renamed in index         '
+    echo '  "C ":   copied in index          '
+    echo '  "UU":   unmerged, both modified  '
+    echo '  "AA":   unmerged, both added     '
+    echo '  "DD":   unmerged, both deleted   '
+    echo '  "AU":   unmerged, added by us    '
+    echo '  "DU":   unmerged, deleted by us  '
+    echo '  "UA":   unmerged, added by them  '
+    echo '  "UD":   unmerged, deleted by them'
+    echo
+    echo '  use char "%" to represent the file in <command>.'
+    exit 1
+fi
+
+status=$1
+command=$2
+
+git status -s | egrep "^$status " | awk '{print $2}' | xargs -I% "bash --login -c $'shopt -s expand_aliases;\n$command'"

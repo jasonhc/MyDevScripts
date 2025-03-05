@@ -1,0 +1,35 @@
+#!/usr/bin/bash
+
+# Check if a rebase is correct by comparing patch files responding to 2 commits.
+# Rebase is OK if no output or only empty lines is output.
+# @author hechuan, 2015/11/17
+
+if [ $# -lt 2 ]; then
+    echo "Usage: check-merge-with-patch <patch-file>|- <commit_rebased>"
+    echo "       check-merge-with-patch <patch-file>|- - (changes not commit)"
+    echo "       check-merge-with-patch <patch-file>|- -- (changes not commit in stage area)"
+    exit 0
+fi
+
+EXTRACT_WRONG_MERGE_REGEX="^[+-][-+][^+-]"
+#EXTRACT_WRONG_MERGE_REGEX="^[+][-+][^+-]"
+TMP_PATCH_FILE=~/work/tmp/check-merge-tmp-patch-file
+if [ "$1" = "-" ]; then
+    cat > $TMP_PATCH_FILE
+    patchFile=$TMP_PATCH_FILE
+else
+    patchFile=$1
+fi
+commitRebased=$2
+
+echo "Rebase check result... (Rebase is OK if no output or only empty lines is output)"
+echo ""
+if [ "$commitRebased" = "-" ]; then
+    changesAfterMerge=""
+elif [ "$commitRebased" = "--" ]; then
+    changesAfterMerge="--cached"
+else
+    changesAfterMerge="$commitRebased^ $commitRebased"
+fi
+
+git diff -w "$changesAfterMerge" | diff -uw "$patchFile" - | grep --color=auto -E "$EXTRACT_WRONG_MERGE_REGEX"

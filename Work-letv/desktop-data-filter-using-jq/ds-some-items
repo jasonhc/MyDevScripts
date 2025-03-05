@@ -1,0 +1,2 @@
+# Usage: ds-some-items <name of items>(item name is seperated with ',')
+jq "..|(.positionData[][])?,(.blockData[])?|{$1}"

@@ -1,0 +1,6 @@
+# Usage: sppkg <package name>
+
+apkPath=$(adb shell pm path $1  | sed -E 's|package:(/.+\.apk)|\1|')
+echo $apkPath | tr -d '\n' | pbcopy
+echo $apkPath 
+

@@ -1,0 +1,11 @@
+# Usage: pullog [<log-number>]
+
+echo "Usage: pullog [<log-number>]"
+
+logNumber=""
+if [ $# -ge 1 ]; then
+    logNumber=".$1"
+fi
+
+#dryRun="echo"
+$dryRun adb pull /data/Logs/Log.0/logcat.log$logNumber
